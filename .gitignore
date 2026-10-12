@@ -1,0 +1,7 @@
+# Imagens originais da marca (o logo já está embutido no index.html)
+*.jpg
+*.png
+
+# Arquivos locais
+.claude/
+.DS_Store
