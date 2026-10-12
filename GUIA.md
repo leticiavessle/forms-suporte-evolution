@@ -76,8 +76,8 @@ Para comparar orgânico com pago, filtre a coluna **Estratégia de tráfego** e 
 
 **Indicadores gerais:**
 
-- **NPS** = % de promotores (9 e 10) menos % de detratores (0 a 6). A coluna **Categoria NPS** já vem preenchida (coluna `BH` da planilha). Fórmula pronta:
-  `=(CONT.SE(Respostas!BH:BH;"Promotor")-CONT.SE(Respostas!BH:BH;"Detrator"))/(CONT.VALORES(Respostas!BH:BH)-1)*100`
+- **NPS** = % de promotores (9 e 10) menos % de detratores (0 a 6). A coluna **Categoria NPS** já vem preenchida (coluna `BG` da planilha). Fórmula pronta:
+  `=(CONT.SE(Respostas!BG:BG;"Promotor")-CONT.SE(Respostas!BG:BG;"Detrator"))/(CONT.VALORES(Respostas!BG:BG)-1)*100`
 - **Esforço para conseguir ajuda (CES, 1 a 7)**: média abaixo de 5 indica que pedir ajuda está custando caro para o Sócio.
 - **"Se a mentoria acabasse amanhã"**: 40% ou mais de "Muito desapontado(a)" é sinal forte de valor percebido.
 - **Canais**: cruze *uso* com *por que não usa*. Muito "Não sabia que existia" ou "Não sei como acessar" é problema de onboarding e comunicação, não de atendimento.
