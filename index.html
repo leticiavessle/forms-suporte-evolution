@@ -199,6 +199,17 @@
     vertical-align: 2px;
   }
   .q-help { margin-top: 4px; color: var(--muted); font-size: 14.5px; }
+  .q-note {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border: 1px dashed var(--gold-deep);
+    border-radius: 999px;
+    background: var(--gold-tint);
+    color: var(--gold-deep);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
   .q-error { display: none; margin-top: 10px; color: var(--error); font-size: 14px; font-weight: 500; }
   .q.has-error .q-error { display: block; }
 
@@ -517,6 +528,10 @@
     STORAGE_KEY: 'pesquisa-suporte-hydra-evolution-v1',
   };
 
+  // Link de revisão (?revisao): avança sem exigir respostas, mostra as perguntas
+  // condicionais com uma nota e não envia nem salva nada.
+  const REVISAO = new URLSearchParams(location.search).has('revisao');
+
   /* =====================================================================
      PERGUNTAS
      "col" é o nome da coluna na planilha. Se mudar o texto de uma
@@ -608,7 +623,7 @@
             'Outro',
           ] },
         { id: 'trava_outro', type: 'text', sub: true, col: 'Onde mais trava (outro)', required: true, label: 'Qual?',
-          showIf: a => a.trava === 'Outro' },
+          showIf: a => a.trava === 'Outro', note: 'Só aparece se a pessoa escolher "Outro".' },
         { id: 'videos_semana', type: 'single', layout: 'chips', col: 'Vídeos produzidos por semana', required: true,
           label: 'Quantos vídeos você produz por semana hoje, somando anúncio e orgânico?',
           options: ['Nenhum', '1 a 3', '4 a 7', '8 a 15', 'Mais de 15'] },
@@ -656,7 +671,7 @@
         { id: 'wpp_tempo', type: 'single', layout: 'chips', col: 'WhatsApp · tempo de resposta', required: true,
           label: 'No WhatsApp, em quanto tempo você costuma ter resposta?',
           options: ['Em até 1 hora', 'De 1 a 4 horas', 'No mesmo dia', 'No dia seguinte ou mais', 'Às vezes fico sem resposta'],
-          showIf: a => !!a['canais.whatsapp.freq'] && a['canais.whatsapp.freq'] !== NUNCA },
+          showIf: a => !!a['canais.whatsapp.freq'] && a['canais.whatsapp.freq'] !== NUNCA, note: 'Só aparece para quem usa o WhatsApp.' },
         { id: 'canal_top', type: 'single', layout: 'chips', col: 'Canal que mais ajuda', required: true, label: 'Qual canal mais te ajuda hoje?',
           options: ['WhatsApp', 'Call de suporte', 'Atendimento 1:1', 'Circle', 'Nenhum ainda'] },
         { id: 'fcr', type: 'single', layout: 'chips', col: 'Resolvido no 1º contato', required: true, label: 'Suas dúvidas costumam ser resolvidas no primeiro contato?',
@@ -710,7 +725,7 @@
         { id: 'nps', type: 'scale', min: 0, max: 10, col: 'NPS (0 a 10)', required: true,
           label: 'De 0 a 10, o quanto você recomendaria a Mentoria Hydra Evolution para um amigo?', ends: ['Nada provável', 'Com certeza'] },
         { id: 'nps_motivo', type: 'textarea', sub: true, col: 'Motivo da nota', label: 'O que mais pesou na sua nota?',
-          showIf: a => a.nps != null,
+          showIf: a => a.nps != null, note: 'Aparece depois da nota. O título muda conforme a nota: 0 a 6, 7 a 8 ou 9 a 10.',
           dynamicLabel: a => a.nps <= 6 ? 'O que faltou para a sua nota ser maior?'
             : a.nps <= 8 ? 'O que faltou para ser um 10?'
             : 'O que mais fez você dar essa nota?' },
@@ -859,7 +874,8 @@
     const head = q.type === 'consent' ? ''
       : isGroup ? `<legend class="q-title">${title}</legend>`
       : `<label class="q-title" for="f-${q.id}">${title}</label>`;
-    wrap.innerHTML = head + help + body + '<p class="q-error" aria-live="polite"></p>';
+    const note = REVISAO && q.note ? `<p class="q-note">${esc(q.note)}</p>` : '';
+    wrap.innerHTML = head + note + help + body + '<p class="q-error" aria-live="polite"></p>';
     return wrap;
   }
 
@@ -876,7 +892,7 @@
       const el = renderQuestion(q);
       qEls[q.id] = el;
       list.appendChild(el);
-      if (q.showIf) conds.push({ el, fn: () => q.showIf(answers) });
+      if (q.showIf) conds.push({ el, fn: () => REVISAO || q.showIf(answers) });
       if (q.dynamicLabel) dyn.push({ el: $('.q-label', el), fn: () => (q.showIf && !q.showIf(answers) ? q.label : q.dynamicLabel(answers)) });
     });
     stepsEl.appendChild(section);
@@ -893,11 +909,13 @@
 
   /* ---------- estado salvo no aparelho ---------- */
   function save() {
+    if (REVISAO) return;
     try {
       localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({ answers, step: state.step, startedAt: state.startedAt, id: state.id }));
     } catch (e) { /* navegação privada ou armazenamento bloqueado */ }
   }
   function load() {
+    if (REVISAO) return false;
     try {
       const saved = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY) || 'null');
       if (!saved || typeof saved.answers !== 'object' || !saved.answers) return false;
@@ -987,6 +1005,7 @@
   }
 
   function validateStep(i) {
+    if (REVISAO) return true;
     let first = null;
     STEPS[i].questions.forEach(q => {
       const msg = isVisible(q) ? check(q) : '';
@@ -1113,7 +1132,7 @@
     $('#progressFill').style.width = pct + '%';
     $('#progressBar').setAttribute('aria-valuenow', pct);
     btnBack.hidden = i === 0;
-    btnNextText.textContent = i === STEPS.length - 1 ? 'Enviar respostas' : 'Continuar';
+    btnNextText.textContent = i < STEPS.length - 1 ? 'Continuar' : REVISAO ? 'Ver tela final' : 'Enviar respostas';
     formAlert.hidden = true;
     save();
     if (focus) {
@@ -1150,8 +1169,8 @@
     btnNextText.textContent = 'Enviando…';
     formAlert.hidden = true;
     try {
-      if (!CONFIG.ENDPOINT) {
-        console.info('[Modo de teste] Resposta que seria enviada:', payload);
+      if (REVISAO || !CONFIG.ENDPOINT) {
+        console.info('[Modo de teste/revisão] Resposta que seria enviada:', payload);
         window.__ultimaResposta = payload;
         await new Promise(r => setTimeout(r, 500));
       } else {
@@ -1190,7 +1209,13 @@
 
   /* ---------- início ---------- */
   $('#linkComunidade').href = CONFIG.LINK_COMUNIDADE;
-  if (!CONFIG.ENDPOINT) $('#testBanner').hidden = false;
+  if (REVISAO) {
+    $('#testBanner').textContent = 'Modo revisão: dá para avançar sem responder e nada é enviado. Perguntas condicionais aparecem todas, com uma nota.';
+    $('.nav-note').textContent = 'Modo revisão: nada é salvo nem enviado.';
+    $('#testBanner').hidden = false;
+  } else if (!CONFIG.ENDPOINT) {
+    $('#testBanner').hidden = false;
+  }
   if (load()) {
     $('#btnStartText').textContent = 'Continuar de onde parei';
     $('#btnRestart').hidden = false;

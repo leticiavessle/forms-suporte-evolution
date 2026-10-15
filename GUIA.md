@@ -2,6 +2,9 @@
 
 **Link de teste:** https://leticiavessle.github.io/forms-suporte-evolution/
 
+**Link de revisão (para o time):** https://leticiavessle.github.io/forms-suporte-evolution/?revisao
+Avança pelas etapas sem precisar responder, mostra as perguntas condicionais com uma nota e nunca envia nada, mesmo depois que a planilha estiver conectada. Não mande este link para os Sócios.
+
 Enquanto a planilha não estiver conectada, a página mostra uma faixa amarela de **Modo de teste**: dá para responder a pesquisa inteira e ver a tela final, mas nada é salvo. Quando você fizer os passos 1 e 2 abaixo, **o mesmo link** passa a gravar as respostas.
 
 ## O que tem neste repositório
